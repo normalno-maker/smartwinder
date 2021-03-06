@@ -1,4 +1,5 @@
 #include <TM1637Display.h>
+#include <EEPROM.h>
 byte enable=13;
 byte displayclk = 3;
 byte displaydio = 2;
@@ -14,15 +15,15 @@ byte stp=11; //DO NOT CHANGE EVER, HARDWARE SPECIFIC
 
 float shutters[] = {32.0, 16.0, 8.0, 4.0, 2.0, 1.0, 1.0 / 2.0, 1.0 / 4.0, 1.0 / 8.0, 1.0 / 16.0, 1.0 / 32.0, 1.0 / 64.0, 1.0 / 128.0,1.0/256.0};
 byte shsiz=(byte) sizeof(shutters)/sizeof(shutters[0]);
-byte i = 11; //starting index in shutter speeds array
+byte i=EEPROM.read(1); //starting index in shutter speeds array
 
 float accels[]={1000.0, 1500.0, 2000.0, 2500.0, 3000.0, 3500.0, 4000.0, 4500.0, 5000.0, 5500.0, 6000.0, 6500.0, 7000.0, 7500.0, 8000.0};
 byte accsiz=(byte) sizeof(shutters)/sizeof(shutters[0]);
-byte h = 6; //starting index in accelerations array
+byte h=EEPROM.read(0); //starting index in accelerations array
 
 float angles[]={60,90,120.0,180.0,360.0};
 byte ansiz=(byte) sizeof(angles)/sizeof(angles[0]);
-byte j=4; //starting index in panorama angle aray
+byte j=EEPROM.read(2); //starting index in panorama angle array
 
 float steps; //(micro)steps per 360 degrees
 const float fov=4.0; //horizontal view angle in degrees
@@ -36,6 +37,9 @@ float th3=1.0/16.0;      //longest shuter for using sixteenthsteps
 float maxaccel=4000.0; //maximal acceleration in steps, correct values for microstepping are calculated from here
 TM1637Display display = TM1637Display(displayclk, displaydio);
 void setup() {
+if (i>=shsiz) {i=0; EEPROM.write(1,i); } //if wrong value stored in eeprom
+if (h>=accsiz) {h=0; EEPROM.write(0,h); }
+if (j>=ansiz) {j=0; EEPROM.write(2,j); }
 pinMode(enable,OUTPUT);
 digitalWrite(enable,HIGH);
 display.setBrightness(7);
@@ -191,22 +195,22 @@ void loop() {
 while(1){
   if(shutters[i]==floor(shutters[i])) display.showNumberDecEx((int) shutters[i],0b00000000,true);
   else display.showNumberDecEx((int) (1.0/shutters[i]),0b00000000,false);//visualizing shutterspeed in seconds and fractions differently
-  if (digitalRead(button2)==LOW) {i=(i+shsiz-1)%shsiz;delay(200);}
-  if (digitalRead(button1)==LOW) {i=(i+1)%shsiz;delay(200);}
+  if (digitalRead(button2)==LOW) {i=(i+shsiz-1)%shsiz;EEPROM.write(1,i);delay(200);}
+  if (digitalRead(button1)==LOW) {i=(i+1)%shsiz;EEPROM.write(1,i);delay(200);}
   if (digitalRead(button4)==LOW) {microstepping();shoot();}
   if (digitalRead(button3)==LOW) {delay(200);break;}
 }
 while(1){
   display.showNumberDecEx((int) angles[j]);
-  if (digitalRead(button2)==LOW) {j=(j+ansiz-1)%ansiz;delay(200);}
-  if (digitalRead(button1)==LOW) {j=(j+1)%ansiz;delay(200);}
+  if (digitalRead(button2)==LOW) {j=(j+ansiz-1)%ansiz;EEPROM.write(2,j);delay(200);}
+  if (digitalRead(button1)==LOW) {j=(j+1)%ansiz;EEPROM.write(2,j);delay(200);}
   if (digitalRead(button4)==LOW) {microstepping();shoot();}
   if (digitalRead(button3)==LOW) {delay(200);break;}
 }
 while(1){
   display.showNumberDecEx((int) accels[h]);
-  if (digitalRead(button2)==LOW) {h=(h+accsiz-1)%accsiz;delay(200);}
-  if (digitalRead(button1)==LOW) {h=(h+1)%accsiz;delay(200);}
+  if (digitalRead(button2)==LOW) {h=(h+accsiz-1)%accsiz;EEPROM.write(0,h);delay(200);}
+  if (digitalRead(button1)==LOW) {h=(h+1)%accsiz;EEPROM.write(0,h);delay(200);}
   if (digitalRead(button4)==LOW) {microstepping();shoot();}
   if (digitalRead(button3)==LOW) {delay(200);break;}
 }
