@@ -11,12 +11,19 @@ byte button3=6;
 byte button4=7;
 byte dir=12;
 byte stp=11; //DO NOT CHANGE EVER, HARDWARE SPECIFIC
-unsigned int i = 11; //starting index in shutter speeds array
+
 float shutters[] = {32.0, 16.0, 8.0, 4.0, 2.0, 1.0, 1.0 / 2.0, 1.0 / 4.0, 1.0 / 8.0, 1.0 / 16.0, 1.0 / 32.0, 1.0 / 64.0, 1.0 / 128.0,1.0/256.0};
-unsigned int j=4; //starting index in panorama angle aray
-unsigned int shsiz=sizeof(shutters)/sizeof(shutters[0]); 
+byte shsiz=(byte) sizeof(shutters)/sizeof(shutters[0]);
+byte i = 11; //starting index in shutter speeds array
+
+float accels[]={1000.0, 1500.0, 2000.0, 2500.0, 3000.0, 3500.0, 4000.0, 4500.0, 5000.0, 5500.0, 6000.0, 6500.0, 7000.0, 7500.0, 8000.0};
+byte accsiz=(byte) sizeof(shutters)/sizeof(shutters[0]);
+byte h = 6; //starting index in accelerations array
+
 float angles[]={60,90,120.0,180.0,360.0};
-unsigned int ansiz=sizeof(angles)/sizeof(angles[0]);
+byte ansiz=(byte) sizeof(angles)/sizeof(angles[0]);
+byte j=4; //starting index in panorama angle aray
+
 float steps; //(micro)steps per 360 degrees
 const float fov=4.0; //horizontal view angle in degrees
 float a; //acceleration (micro)steps per second per second
@@ -75,7 +82,7 @@ void microstepping()
     ms=2.0;
     }
   steps=200.0*ms; //correcting steps per rotation
-  a=maxaccel*ms;
+  a=accels[h]*ms;
   alfa=fov*ms;
 }
 void microstepping_debug(int m)
@@ -105,7 +112,7 @@ void microstepping_debug(int m)
     ms=2.0;
     }
   steps=200.0*ms; //correcting steps per rotation
-  a=maxaccel*ms;
+  a=accels[h]*ms;
   alfa=fov*ms;
 }
 
@@ -193,6 +200,13 @@ while(1){
   display.showNumberDecEx((int) angles[j]);
   if (digitalRead(button2)==LOW) {j=(j+ansiz-1)%ansiz;delay(200);}
   if (digitalRead(button1)==LOW) {j=(j+1)%ansiz;delay(200);}
+  if (digitalRead(button4)==LOW) {microstepping();shoot();}
+  if (digitalRead(button3)==LOW) {delay(200);break;}
+}
+while(1){
+  display.showNumberDecEx((int) accels[h]);
+  if (digitalRead(button2)==LOW) {h=(h+accsiz-1)%accsiz;delay(200);}
+  if (digitalRead(button1)==LOW) {h=(h+1)%accsiz;delay(200);}
   if (digitalRead(button4)==LOW) {microstepping();shoot();}
   if (digitalRead(button3)==LOW) {delay(200);break;}
 }
